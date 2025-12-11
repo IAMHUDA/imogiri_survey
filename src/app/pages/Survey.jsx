@@ -2,15 +2,31 @@
 import React, { useEffect, useState } from "react";
 import { FileText, HelpCircle } from "lucide-react";
 import Footer from "../components/Footer";
+import SurveyForm from "../components/SurveyForm";
+import { useSurveys } from "../../hooks/useSurveys";
 
 /**
  * Survey page — uses the same blue-white visual system and fade-in animations.
  * - FAQ with simple accordion state
  * - Documents & news listing follow same card style
+ * - Integrated with React Query to fetch surveys from backend
+ * - Survey notification moved to Home page
  */
 
 export default function Survey() {
   const [expandedFaq, setExpandedFaq] = useState(null);
+  const [showSurveyList, setShowSurveyList] = useState(false);
+  const [selectedSurveyId, setSelectedSurveyId] = useState(null);
+  const [showSurveyForm, setShowSurveyForm] = useState(false);
+  
+  // Fetch surveys from backend using React Query
+  const { data: surveysData, isLoading, isError, error } = useSurveys();
+  
+  const handleSelectSurvey = (surveyId) => {
+    setSelectedSurveyId(surveyId);
+    setShowSurveyList(false);
+    setShowSurveyForm(true);
+  };
 
   const surveyDescription = {
     tujuan:
@@ -110,13 +126,143 @@ export default function Survey() {
 
   return (
     <div className="min-h-screen bg-white text-gray-800">
+      {/* Survey List Modal */}
+      {showSurveyList && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+              <h2 className="text-xl font-bold text-[#17307a]">Pilih Survey</h2>
+              <button
+                onClick={() => setShowSurveyList(false)}
+                className="text-gray-400 hover:text-gray-600 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-6">
+              {isLoading && (
+                <div className="text-center py-8">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#17307a]"></div>
+                  <p className="mt-2 text-gray-600">Memuat daftar survey...</p>
+                </div>
+              )}
+              
+              {isError && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <p className="text-red-700 font-semibold">Gagal memuat survey</p>
+                  <p className="text-red-600 text-sm mt-1">{error?.message}</p>
+                </div>
+              )}
+              
+              {surveysData && surveysData.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  <p>Belum ada survey tersedia</p>
+                </div>
+              )}
+              
+              {surveysData && surveysData.length > 0 && (
+                <div className="space-y-3">
+                  {surveysData.map((survey) => (
+                    <button
+                      key={survey.id}
+                      onClick={() => handleSelectSurvey(survey.id)}
+                      className="w-full text-left p-4 rounded-lg border-2 border-gray-200 hover:border-[#17307a] hover:bg-[#f6f9ff] transition-all group"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <h3 className="font-bold text-[#17307a] group-hover:text-[#1f2a78] text-lg">
+                            {survey.namaSurvey}
+                          </h3>
+                          {survey.deskripsi && (
+                            <p className="text-sm text-gray-600 mt-1">
+                              {survey.deskripsi}
+                            </p>
+                          )}
+                          {survey._count?.pertanyaan !== undefined && (
+                            <p className="text-xs text-gray-500 mt-2">
+                              {survey._count.pertanyaan} pertanyaan
+                            </p>
+                          )}
+                        </div>
+                        <svg className="w-6 h-6 text-[#17307a] opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Survey Form Modal */}
+      {showSurveyForm && selectedSurveyId && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full my-8 max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+              <h2 className="text-xl font-bold text-[#17307a]">Survey UMKM Imogiri</h2>
+              <button
+                onClick={() => {
+                  setShowSurveyForm(false);
+                  setSelectedSurveyId(null);
+                }}
+                className="text-gray-400 hover:text-gray-600 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-6">
+              <SurveyForm 
+                surveyId={selectedSurveyId} 
+                onClose={() => {
+                  setShowSurveyForm(false);
+                  setSelectedSurveyId(null);
+                }} 
+              />
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Hero */}
       <section className="py-20 px-6 md:px-12">
         <div className="max-w-6xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-extrabold text-[#17307a] mb-3">Survey UMKM Imogiri</h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Bantuan Anda sangat berharga untuk pengembangan UMKM lokal kami.
-          </p>
+          
+          
+          {/* Loading State */}
+          {isLoading && (
+            <div className="mt-6 text-[#17307a]">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#17307a]"></div>
+              <p className="mt-2">Memuat data survei...</p>
+            </div>
+          )}
+          
+          {/* Error State */}
+          {isError && (
+            <div className="mt-6 bg-red-50 border border-red-200 rounded-lg p-4 max-w-md mx-auto">
+              <p className="text-red-700 font-semibold">Gagal memuat data survei</p>
+              <p className="text-red-600 text-sm mt-1">{error?.message || 'Terjadi kesalahan'}</p>
+            </div>
+          )}
+          
+          {/* CTA */}
+      <section className="py-12 px-6 md:px-12">
+        <div className="max-w-6xl mx-auto">
+          <div className="bg-gradient-to-r from-[#3b4bc6] to-[#1f2a78] text-white rounded-2xl p-8 text-center fade-in-item">
+            <h4 className="text-2xl font-extrabold mb-3">Suara Anda Penting!</h4>
+            <p className="mb-4 text-white/90">Terima kasih telah meluangkan waktu untuk mempelajari survei ini.</p>
+            <button 
+              onClick={() => setShowSurveyList(true)}
+              className="inline-block bg-white text-[#17307a] px-6 py-3 rounded-full font-bold hover:bg-gray-50 transition cursor-pointer"
+            >
+              Mulai Mengisi Survei
+            </button>
+          </div>
+        </div>
+      </section>
         </div>
       </section>
 
@@ -136,22 +282,7 @@ export default function Survey() {
         </div>
       </section>
 
-      {/* Manfaat */}
-      <section className="py-8 px-6 md:px-12">
-        <div className="max-w-6xl mx-auto">
-          <div className="bg-gradient-to-r from-[#3b4bc6] to-[#1f2a78] text-white rounded-2xl p-6 fade-in-item">
-            <h4 className="text-xl font-extrabold mb-4">Manfaat Survei</h4>
-            <div className="grid md:grid-cols-2 gap-3">
-              {surveyDescription.manfaat.map((m, i) => (
-                <div key={i} className="flex gap-3 items-start">
-                  <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold">✓</div>
-                  <p className="text-white/90">{m}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+
 
       {/* FAQ */}
       <section className="py-12 px-6 md:px-12 bg-gray-50">
@@ -183,7 +314,7 @@ export default function Survey() {
       </section>
 
       {/* Documents & News */}
-      <section className="py-12 px-6 md:px-12">
+      {/* <section className="py-12 px-6 md:px-12">
         <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-6">
           <div>
             <h4 className="font-extrabold text-[#17307a] mb-4">Dokumen</h4>
@@ -217,18 +348,7 @@ export default function Survey() {
             </div>
           </div>
         </div>
-      </section>
-
-      {/* CTA */}
-      <section className="py-12 px-6 md:px-12">
-        <div className="max-w-6xl mx-auto">
-          <div className="bg-gradient-to-r from-[#3b4bc6] to-[#1f2a78] text-white rounded-2xl p-8 text-center fade-in-item">
-            <h4 className="text-2xl font-extrabold mb-3">Suara Anda Penting!</h4>
-            <p className="mb-4 text-white/90">Terima kasih telah meluangkan waktu untuk mempelajari survei ini.</p>
-            <a className="inline-block bg-white text-[#17307a] px-6 py-3 rounded-full font-bold">Mulai Mengisi Survei</a>
-          </div>
-        </div>
-      </section>
+      </section> */}
 
       <Footer />
     </div>

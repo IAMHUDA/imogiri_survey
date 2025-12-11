@@ -1,10 +1,13 @@
 // src/pages/Home.jsx
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import Carousel from "../components/Carousel";
+import SurveyNotification from "../components/SurveyNotification";
+import SurveyForm from "../components/SurveyForm";
 import { MapPin, Users, Store, TrendingUp } from "lucide-react";
 import { useFadeInOnScroll } from "../../hooks/useFadeInOnScroll";
 import { useParallax } from "../../hooks/useParallax";
+import { useSurveys } from "../../hooks/useSurveys";
 
 import Angkruksari from "../../assets/pasar/Angkruksari.jpg";
 import ImogiriImg from "../../assets/pasar/Imogiri.jpg";
@@ -14,10 +17,20 @@ import BantulImg from "../../assets/pasar/Bantul.jpg";
 import Footer from "../components/Footer";
 
 function Home() {
+  const [showSurveyForm, setShowSurveyForm] = useState(false);
   const featuresRef = useFadeInOnScroll();
   const aboutRef = useFadeInOnScroll();
   const ctaRef = useFadeInOnScroll();
   const parallaxAbout = useParallax(0.25);
+  
+  // Fetch surveys from backend
+  const { data: surveysData } = useSurveys();
+  
+  // Filter to only show "survey layanan"
+  const surveyLayanan = surveysData?.find(s => 
+    s.namaSurvey?.toLowerCase().includes('survey layanan') ||
+    s.namaSurvey?.toLowerCase().includes('layanan')
+  );
 
   const fadeItemsRef = useRef([]);
 
@@ -95,6 +108,34 @@ useEffect(() => {
 
   return (
     <div className="bg-white text-gray-800">
+      
+      {/* Survey Notification Banner */}
+      {!showSurveyForm && surveyLayanan && (
+        <SurveyNotification onTakeSurvey={() => setShowSurveyForm(true)} />
+      )}
+      
+      {/* Survey Form Modal */}
+      {showSurveyForm && surveyLayanan && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full my-8 max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+              <h2 className="text-xl font-bold text-[#17307a]">Survey UMKM Imogiri</h2>
+              <button
+                onClick={() => setShowSurveyForm(false)}
+                className="text-gray-400 hover:text-gray-600 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-6">
+              <SurveyForm 
+                surveyId={surveyLayanan.id} 
+                onClose={() => setShowSurveyForm(false)} 
+              />
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Carousel */}
       <section className="w-full">
