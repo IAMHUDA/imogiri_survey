@@ -16,6 +16,8 @@ export default function SurveyForm({ surveyId, onClose }) {
   
   // Get questions from survey data
   const questions = survey?.pertanyaan || [];
+  console.log('Survey Questions Data:', questions);
+
 
   const handleAnswerChange = (questionId, value) => {
     setAnswers(prev => ({
@@ -91,87 +93,118 @@ export default function SurveyForm({ surveyId, onClose }) {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Questions */}
         <div className="space-y-6">
-          {questions?.map((question, index) => (
-            <div key={question.id} className="bg-white rounded-2xl p-6 shadow-md border border-gray-100">
-              <div className="mb-4">
-                <span className="inline-block bg-[#17307a] text-white text-xs font-bold px-3 py-1 rounded-full mb-2">
-                  Pertanyaan {index + 1}
-                </span>
-                <h4 className="text-lg font-bold text-gray-800">
-                  {question.teks} <span className="text-red-500">*</span>
-                </h4>
+          {questions?.map((question, index) => {
+            // Helper to determine question type
+            const getQuestionType = (q) => {
+              const val = (q.tipe || q.type || q.jenis || '').toString().toLowerCase();
+              if (['text', 'string', 'short_text', 'isian', 'jawaban_singkat'].includes(val)) return 'text';
+              if (['textarea', 'long_text', 'paragraph', 'uraian', 'jawaban_panjang'].includes(val)) return 'textarea';
+              if (['multiple-choice', 'multiple_choice', 'radio', 'choice', 'pilihan_ganda', 'pilgan'].includes(val)) return 'multiple-choice';
+              if (['rating', 'scale', 'skala'].includes(val)) return 'rating';
+              return val;
+            };
+
+            const qType = getQuestionType(question);
+            const options = question.opsi || question.options || [];
+
+            return (
+              <div key={question.id || index} className="bg-white rounded-2xl p-6 shadow-md border border-gray-100">
+                <div className="mb-4">
+                  <span className="inline-block bg-[#17307a] text-white text-xs font-bold px-3 py-1 rounded-full mb-2">
+                    Pertanyaan {index + 1}
+                  </span>
+                  <h4 className="text-lg font-bold text-gray-800">
+                    {question.teks || question.text || question.question} <span className="text-red-500">*</span>
+                  </h4>
+                  {/* Debug Info (Optional - remove in production if desired, keeping for now) */}
+                  {/* <div className="text-xs text-gray-400">Type: {qType}</div> */}
+                </div>
+
+                {/* Text Input */}
+                {qType === 'text' && (
+                  <input
+                    type="text"
+                    value={answers[question.id] || ''}
+                    onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                    required
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-[#17307a] focus:ring-2 focus:ring-[#17307a]/20 outline-none transition"
+                    placeholder="Ketik jawaban Anda..."
+                  />
+                )}
+
+                {/* Textarea */}
+                {qType === 'textarea' && (
+                  <textarea
+                    value={answers[question.id] || ''}
+                    onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                    required
+                    rows={4}
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-[#17307a] focus:ring-2 focus:ring-[#17307a]/20 outline-none transition resize-none"
+                    placeholder="Ketik jawaban Anda..."
+                  />
+                )}
+
+                {/* Multiple Choice */}
+                {qType === 'multiple-choice' && options.length > 0 && (
+                  <div className="space-y-3">
+                    {options.map((option, optIndex) => (
+                      <label
+                        key={optIndex}
+                        className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-[#f6f9ff] cursor-pointer transition"
+                      >
+                        <input
+                          type="radio"
+                          name={`question-${question.id}`}
+                          value={option}
+                          checked={answers[question.id] === option}
+                          onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                          required
+                          className="w-5 h-5 text-[#17307a] focus:ring-[#17307a]"
+                        />
+                        <span className="text-gray-700">{option}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+                {qType === 'multiple-choice' && options.length === 0 && (
+                   <div className="text-orange-500 text-sm italic">
+                     Error: Tipe pilihan ganda tetapi tidak ada opsi yang tersedia. (Check `opsi` or `options`)
+                   </div>
+                )}
+
+                {/* Rating */}
+                {qType === 'rating' && (
+                  <div className="flex gap-2">
+                    {[1, 2, 3, 4, 5].map((rating) => (
+                      <button
+                        key={rating}
+                        type="button"
+                        onClick={() => handleAnswerChange(question.id, rating.toString())}
+                        className={`
+                          w-12 h-12 rounded-full font-bold transition-all
+                          ${answers[question.id] === rating.toString()
+                            ? 'bg-[#17307a] text-white scale-110'
+                            : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                          }
+                        `}
+                      >
+                        {rating}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Fallback for unknown types */}
+                {!['text', 'textarea', 'multiple-choice', 'rating'].includes(qType) && (
+                  <div className="bg-red-50 text-red-600 p-3 rounded border border-red-200">
+                    <p className="font-bold">Error Rendering Input</p>
+                    <p className="text-sm">Unknown question type: <code>{qType || 'undefined'}</code></p>
+                    <p className="text-xs text-gray-500 mt-1">Raw object: {JSON.stringify(question)}</p>
+                  </div>
+                )}
               </div>
-
-              {/* Text Input */}
-              {question.tipe === 'text' && (
-                <input
-                  type="text"
-                  value={answers[question.id] || ''}
-                  onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-                  required
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-[#17307a] focus:ring-2 focus:ring-[#17307a]/20 outline-none transition"
-                  placeholder="Ketik jawaban Anda..."
-                />
-              )}
-
-              {/* Textarea */}
-              {question.tipe === 'textarea' && (
-                <textarea
-                  value={answers[question.id] || ''}
-                  onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-                  required
-                  rows={4}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-[#17307a] focus:ring-2 focus:ring-[#17307a]/20 outline-none transition resize-none"
-                  placeholder="Ketik jawaban Anda..."
-                />
-              )}
-
-              {/* Multiple Choice */}
-              {question.tipe === 'multiple-choice' && question.opsi && (
-                <div className="space-y-3">
-                  {question.opsi.map((option, optIndex) => (
-                    <label
-                      key={optIndex}
-                      className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-[#f6f9ff] cursor-pointer transition"
-                    >
-                      <input
-                        type="radio"
-                        name={`question-${question.id}`}
-                        value={option}
-                        checked={answers[question.id] === option}
-                        onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-                        required
-                        className="w-5 h-5 text-[#17307a] focus:ring-[#17307a]"
-                      />
-                      <span className="text-gray-700">{option}</span>
-                    </label>
-                  ))}
-                </div>
-              )}
-
-              {/* Rating */}
-              {question.tipe === 'rating' && (
-                <div className="flex gap-2">
-                  {[1, 2, 3, 4, 5].map((rating) => (
-                    <button
-                      key={rating}
-                      type="button"
-                      onClick={() => handleAnswerChange(question.id, rating.toString())}
-                      className={`
-                        w-12 h-12 rounded-full font-bold transition-all
-                        ${answers[question.id] === rating.toString()
-                          ? 'bg-[#17307a] text-white scale-110'
-                          : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
-                        }
-                      `}
-                    >
-                      {rating}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Error Message */}
