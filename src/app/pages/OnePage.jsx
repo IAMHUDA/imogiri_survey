@@ -4,6 +4,7 @@ import SurveyForm from '../components/SurveyForm';
 import Footer from '../components/Footer';
 import { useSurveys } from '../../hooks/useSurveys';
 import { useUMKMs } from '../../hooks/useUMKM';
+import Swal from 'sweetalert2';
 
 // Import images
 import Angkruksari from '../../assets/pasar/Angkruksari.jpg';
@@ -15,21 +16,67 @@ import Gatak from '../../assets/pasar/Gatak.jpg';
 import Gumulan from '../../assets/pasar/Gumulan.jpg';
 import HewanImogiri from '../../assets/pasar/HewanImogiri.jpg';
 import logo from '../../assets/logo/nav-log.png';
+import Sigar from '../../assets/logo/sigar.png';
+import Awan from '../../assets/logo/awan.png';
+import Awan2 from '../../assets/logo/awan2.png';
 
 export default function OnePage() {
-  const [activeSection, setActiveSection] = useState('home');
+  const [activeSection, setActiveSection] = useState('Beranda');
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [showSurveyForm, setShowSurveyForm] = useState(false);
   const [showSurveyList, setShowSurveyList] = useState(false);
   const [selectedSurveyId, setSelectedSurveyId] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(0);
+
+  // Contact Form State
+  const [contactForm, setContactForm] = useState({
+    nama: '',
+    email: '',
+    subjek: '',
+    pesan: ''
+  });
+
+  const handleContactChange = (e) => {
+    const { name, value } = e.target;
+    setContactForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleContactSubmit = (e) => {
+    e.preventDefault();
+    const { nama, email, subjek, pesan } = contactForm;
+
+    if (!nama || !email || !subjek || !pesan) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Perhatian',
+        text: 'Harap isi semua kolom formulir!',
+        confirmButtonColor: '#3b82f6',
+      });
+      return;
+    }
+
+    // Construct mailto link
+    const mailtoLink = `mailto:desa.imogiri@bantulkab.go.id?subject=${encodeURIComponent(subjek)}&body=${encodeURIComponent(`Nama: ${nama}\nEmail: ${email}\n\nPesan:\n${pesan}`)}`;
+    
+    // Open email client
+    window.location.href = mailtoLink;
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Terkirim!',
+      text: 'Aplikasi email Anda telah dibuka untuk mengirim pesan ini.',
+      confirmButtonColor: '#3b82f6',
+    });
+    
+    setContactForm({ nama: '', email: '', subjek: '', pesan: '' });
+  };
   
   // Refs for parallax
   const heroRef = useRef(null);
   const umkmRef = useRef(null);
   const surveyRef = useRef(null);
-  const contactRef = useRef(null);
+  const KontakRef = useRef(null);
 
   // Fetch data
   const { data: surveysData } = useSurveys();
@@ -37,8 +84,9 @@ export default function OnePage() {
   
   // Get survey layanan for notification
   const surveyLayanan = surveysData?.find(s => 
-    s.namaSurvey?.toLowerCase().includes('survey layanan') ||
-    s.namaSurvey?.toLowerCase().includes('layanan')
+    s.namaSurvey?.toLowerCase().includes('kepuasan masyarakat')
+  ) || surveysData?.find(s => 
+    s.namaSurvey?.toLowerCase().includes('kepuasan layanan')
   );
   
   // UMKM display data
@@ -152,14 +200,14 @@ export default function OnePage() {
                   Pemerintah Kabupaten Bantul
                 </span>
                 <span className={`text-base font-bold ${scrolled > 50 ? 'text-[#3b4bc6]' : 'text-[#3b4bc6]'}`}>
-                  Kelurahan Imogiri
+                  Kalurahan Imogiri
                 </span>
               </div>
             </div>
             
             {/* Desktop Menu */}
             <div className="hidden md:flex items-center gap-1 bg-white/50 backdrop-blur-sm px-2 py-1 rounded-full border border-white/20 shadow-sm">
-              {['home', 'umkm', 'survey', 'contact'].map(section => (
+              {['Beranda', 'umkm', 'survey', 'Kontak'].map(section => (
                 <button
                   key={section}
                   onClick={() => scrollToSection(section)}
@@ -169,7 +217,7 @@ export default function OnePage() {
                       : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
                   }`}
                 >
-                  {section.charAt(0).toUpperCase() + section.slice(1)}
+                  {section === 'umkm' ? 'UMKM' : section.charAt(0).toUpperCase() + section.slice(1)}
                 </button>
               ))}
             </div>
@@ -187,7 +235,7 @@ export default function OnePage() {
           {mobileMenuOpen && (
             <div className="md:hidden mt-4 p-4 bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-100 animate-scale-in">
               <div className="flex flex-col gap-2">
-                {['home', 'umkm', 'survey', 'contact'].map(section => (
+                {['Beranda', 'umkm', 'survey', 'Kontak'].map(section => (
                   <button
                     key={section}
                     onClick={() => scrollToSection(section)}
@@ -197,7 +245,7 @@ export default function OnePage() {
                         : 'text-gray-600 hover:bg-gray-50'
                     }`}
                   >
-                    {section.charAt(0).toUpperCase() + section.slice(1)}
+                    {section === 'umkm' ? 'UMKM' : section.charAt(0).toUpperCase() + section.slice(1)}
                   </button>
                 ))}
               </div>
@@ -220,7 +268,7 @@ export default function OnePage() {
               <Activity size={20} />
             </div>
             <div className="text-left">
-              <div className="text-xs font-bold text-blue-600 uppercase tracking-wider">Baru</div>
+              <div className="text-xs font-bold text-blue-600 uppercase tracking-wider">Kepuasan Layanan</div>
               <div className="text-sm font-bold text-gray-800">Isi Survey</div>
             </div>
             <span className="absolute top-0 right-0 -mt-1 -mr-1 flex h-3 w-3">
@@ -231,8 +279,8 @@ export default function OnePage() {
         </div>
       )}
 
-      {/* ========== SECTION 1: HOME ========== */}
-      <section id="home" className="relative min-h-screen flex items-center pt-20 overflow-hidden bg-gradient-to-b from-blue-50 via-white to-white">
+      {/* ========== SECTION 1: Beranda ========== */}
+      <section id="Beranda" className="relative min-h-screen flex items-center pt-20 overflow-hidden bg-gradient-to-b from-blue-50 via-white to-white">
         {/* Animated Background Blobs */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div 
@@ -263,7 +311,7 @@ export default function OnePage() {
               
               <h1 className="text-5xl lg:text-7xl font-black text-gray-900 leading-[1.1] tracking-tight">
                 Jelajahi <br/>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 font-handwriting text-6xl lg:text-8xl pl-2">
+                <span className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 font-handwriting text-5xl lg:text-8xl leading-normal pr-4">
                   Potensi Lokal
                 </span>
               </h1>
@@ -274,13 +322,13 @@ export default function OnePage() {
               
               <div className="flex flex-wrap gap-4">
                 <button 
-                  onClick={() => scrollToSection('umkm')}
+                  onClick={() => setShowSurveyList(true)}
                   className="px-8 py-4 bg-blue-600 text-white rounded-full font-bold text-lg shadow-lg shadow-blue-600/30 hover:bg-blue-700 hover:scale-105 transition-all duration-300"
                 >
-                  Mulai Jelajah
+                  Daftar Survey
                 </button>
                 <button 
-                  onClick={() => scrollToSection('contact')}
+                  onClick={() => scrollToSection('Kontak')}
                   className="px-8 py-4 bg-white text-gray-700 border border-gray-200 rounded-full font-bold text-lg hover:bg-gray-50 hover:border-gray-300 transition-all duration-300"
                 >
                   Hubungi Kami
@@ -305,43 +353,43 @@ export default function OnePage() {
               </div>
             </div>
 
-            <div className="relative lg:h-[600px] flex items-center justify-center animate-slide-left">
-              <div className="relative w-[500px] h-[550px]">
-                <div className="absolute inset-0 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-t-full rounded-b-[100px] rotate-6 opacity-20 blur-2xl"></div>
-                <div className="absolute inset-0 bg-white rounded-t-full rounded-b-[100px] shadow-2xl overflow-hidden border-4 border-white transform transition-transform hover:scale-[1.02] duration-500">
-                  <img 
-                    src={ImogiriImg} 
-                    alt="Imogiri Landscape" 
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-                  <div className="absolute bottom-12 left-0 w-full text-center text-white">
-                    <div className="text-2xl font-handwriting opacity-90 tracking-widest mb-1 text-yellow-300">Destinasi Wisata</div>
-                    <div className="text-4xl font-bold">Pasar Imogiri</div>
-                  </div>
-                </div>
+            <div className="relative lg:h-[600px] flex items-center justify-center animate-slide-left mt-10 lg:mt-0">
+              <div className="relative w-full max-w-[320px] md:max-w-[500px] aspect-[4/5] md:aspect-auto md:h-[550px]">
+                {/* Glow Effect */}
+                <div className="absolute inset-0 bg-blue-400/5 rounded-full blur-3xl transform scale-125"></div>
                 
-                {/* Floating Cards */}
-                <div className="absolute -right-8 top-20 bg-white p-4 rounded-2xl shadow-xl animate-float border border-gray-100 hidden md:block">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-600">
-                      <Star size={20} fill="currentColor" />
-                    </div>
-                    <div>
-                      <div className="font-bold text-gray-900">Top Rated</div>
-                      <div className="text-xs text-gray-500">Kualitas Terbaik</div>
-                    </div>
-                  </div>
-                </div>
+                {/* Main Container - No Border */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  
+                  {/* Top Right Cloud */}
+                  <img 
+                    src={Awan2}
+                    alt="Cloud Decoration"
+                    className="absolute -top-4 -right-12 md:-top-10 md:-right-24 w-48 md:w-80 opacity-90 animate-float object-contain brightness-100 drop-shadow-sm z-20"
+                    style={{ animationDelay: '1s' }}
+                  />
 
-                <div className="absolute -left-8 bottom-32 bg-white p-4 rounded-2xl shadow-xl animate-float animation-delay-2000 border border-gray-100 hidden md:block">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-orange-600">
-                      <Activity size={20} />
-                    </div>
-                    <div>
-                      <div className="font-bold text-gray-900">Trending</div>
-                      <div className="text-xs text-gray-500">Produk Terlaris</div>
+                  {/* Siger Usage - Centered & Enlarged */}
+                  <div className="relative z-10 p-0 transform hover:scale-110 transition-transform duration-700 w-full flex justify-center">
+                     <img 
+                       src={Sigar} 
+                       alt="Siger Motif" 
+                       className="w-full md:w-auto md:min-w-[550px] drop-shadow-2xl filter contrast-125 saturate-110 object-contain"
+                     />
+                  </div>
+                  
+                  {/* Bottom Left Cloud */}
+                  <img 
+                    src={Awan}
+                    alt="Cloud Decoration"
+                    className="absolute -bottom-4 -left-16 md:-bottom-10 md:-left-32 w-48 md:w-80 opacity-90 animate-float object-contain brightness-100 drop-shadow-sm z-20"
+                  />
+
+                  {/* Text Overlay */}
+                  <div className="absolute bottom-0 md:-bottom-10 left-0 w-full text-center z-30">
+                    <div className="text-2xl md:text-4xl font-handwriting text-yellow-600 mb-2 drop-shadow-sm">Kalurahan</div>
+                    <div className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-600 drop-shadow-sm tracking-wide">
+                      IMOGIRI
                     </div>
                   </div>
                 </div>
@@ -493,8 +541,8 @@ export default function OnePage() {
                 </h4>
                 <div className="space-y-4">
                   {[
-                    { q: "Apakah data saya aman?", a: "Ya, data Anda dienkripsi dan dijaga kerahasiaannya." },
-                    { q: "Berapa lama survey berlangsung?", a: "Hanya membutuhkan waktu sekitar 5-10 menit." },
+                    { q: "Apakah data saya aman?", a: "Ya, data Anda dijaga kerahasiaannya." },
+                    { q: "Berapa lama survey berlangsung?", a: "Hanya membutuhkan waktu sekitar beberapa menit." },
                     { q: "Apa manfaat bagi saya?", a: "Membantu meningkatkan kualitas produk yang Anda konsumsi." }
                   ].map((faq, idx) => (
                     <div key={idx} className="bg-blue-950/50 rounded-xl p-4 border border-blue-800/50 hover:bg-blue-900/50 transition-colors">
@@ -509,8 +557,8 @@ export default function OnePage() {
         </div>
       </section>
 
-      {/* ========== SECTION 4: CONTACT ========== */}
-      <section id="contact" className="relative py-32 bg-gray-50 overflow-hidden">
+      {/* ========== SECTION 4: Kontak ========== */}
+      <section id="Kontak" className="relative py-32 bg-gray-50 overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="text-center max-w-3xl mx-auto mb-20 reveal-on-scroll">
             <h2 className="text-blue-600 font-handwriting text-3xl mb-3">Hubungi Kami</h2>
@@ -523,9 +571,8 @@ export default function OnePage() {
           <div className="grid lg:grid-cols-3 gap-8">
             <div className="lg:col-span-1 space-y-4 reveal-on-scroll">
               {[
-                { icon: MapPin, title: "Alamat", desc: "Kecamatan Imogiri, Bantul, DIY", color: "bg-blue-100 text-blue-600" },
-                { icon: Mail, title: "Email", desc: "info@umkmimogiri.id", color: "bg-indigo-100 text-indigo-600" },
-                { icon: Phone, title: "Telepon", desc: "+62 274 XXXXXXX", color: "bg-purple-100 text-purple-600" }
+                { icon: MapPin, title: "Alamat", desc: "Jl. Raya Imogiri Km 15, Toprayan RT 002, Imogiri, Imogiri, Bantul 55782", color: "text-blue-600" },
+                { icon: Mail, title: "Email", desc: " desa.imogiri@bantulkab.go.id", color: "text-indigo-600" },
               ].map((item, idx) => (
                 <div key={idx} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md transition-shadow">
                   <div className={`w-12 h-12 ${item.color} rounded-xl flex items-center justify-center`}>
@@ -540,24 +587,52 @@ export default function OnePage() {
             </div>
 
             <div className="lg:col-span-2 bg-white rounded-3xl shadow-xl border border-gray-100 p-8 md:p-12 reveal-on-scroll">
-              <form className="space-y-6">
+              <form className="space-y-6" onSubmit={handleContactSubmit}>
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-sm font-bold text-gray-700">Nama Lengkap</label>
-                    <input type="text" className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" placeholder="John Doe" />
+                    <input 
+                      type="text" 
+                      name="nama"
+                      value={contactForm.nama}
+                      onChange={handleContactChange}
+                      className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" 
+                      placeholder="John Doe" 
+                    />
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-bold text-gray-700">Email</label>
-                    <input type="email" className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" placeholder="john@example.com" />
+                    <input 
+                      type="email" 
+                      name="email"
+                      value={contactForm.email}
+                      onChange={handleContactChange}
+                      className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" 
+                      placeholder="john@example.com" 
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-gray-700">Subjek</label>
-                  <input type="text" className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" placeholder="Tanya seputar UMKM" />
+                  <input 
+                    type="text" 
+                    name="subjek"
+                    value={contactForm.subjek}
+                    onChange={handleContactChange}
+                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" 
+                    placeholder="Tanya seputar UMKM" 
+                  />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-gray-700">Pesan</label>
-                  <textarea rows={4} className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all resize-none" placeholder="Tulis pesan Anda disini..."></textarea>
+                  <textarea 
+                    rows={4} 
+                    name="pesan"
+                    value={contactForm.pesan}
+                    onChange={handleContactChange}
+                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all resize-none" 
+                    placeholder="Tulis pesan Anda disini..."
+                  ></textarea>
                 </div>
                 <button type="submit" className="w-full py-4 bg-blue-900 text-white rounded-xl font-bold text-lg hover:bg-blue-800 transition-colors shadow-lg">
                   Kirim Pesan

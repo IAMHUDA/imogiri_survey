@@ -27,9 +27,8 @@ const Footer = () => {
             <div className="md:text-right">
               <h3 className="font-semibold mb-3 text-lg">Hubungi Kami</h3>
               <ul className="space-y-2 text-white/80 text-sm">
-                <li>+62 123 456 789</li>
-                <li>info@imogiri.go.id</li>
-                <li>Jl. Imogiri Timur Km 10, Bantul, Yogyakarta</li>
+                <li>desa.imogiri@bantulkab.go.id</li>
+                <li>Jl. Raya Imogiri Km 15, Toprayan RT 002, Imogiri, Imogiri, Bantul 55782</li>
               </ul>
             </div>
 
