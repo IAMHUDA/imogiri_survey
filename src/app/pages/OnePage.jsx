@@ -26,6 +26,7 @@ export default function OnePage() {
   const [showSurveyForm, setShowSurveyForm] = useState(false);
   const [showSurveyList, setShowSurveyList] = useState(false);
   const [selectedSurveyId, setSelectedSurveyId] = useState(null);
+  const [selectedUmkm, setSelectedUmkm] = useState(null); // New state for selected UMKM
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(0);
 
@@ -420,14 +421,15 @@ export default function OnePage() {
             {displayUmkmData.map((umkm, idx) => (
               <div 
                 key={umkm.id}
-                className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 reveal-on-scroll"
+                onClick={() => setSelectedUmkm(umkm)} // Make clickable
+                className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 reveal-on-scroll cursor-pointer group" // Add cursor-pointer
                 style={{ transitionDelay: `${idx * 100}ms` }}
               >
                 <div className="h-64 overflow-hidden bg-gray-100 relative">
                   <img 
                     src={getImageUrl(umkm)} 
                     alt={umkm.namaUsaha || umkm.name}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" // Add zoom effect
                     loading="lazy"
                     onError={(e) => {
                       e.target.onerror = null;
@@ -443,7 +445,7 @@ export default function OnePage() {
                 </div>
                 
                 <div className="p-8">
-                  <h4 className="text-xl font-bold text-gray-900 mb-2">
+                  <h4 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
                     {umkm.namaUsaha || umkm.name}
                   </h4>
                   <p className="text-gray-500 text-sm line-clamp-2 mb-6">
@@ -642,6 +644,137 @@ export default function OnePage() {
           </div>
         </div>
       </section>
+
+      {/* UMKM Detail Modal */}
+      {selectedUmkm && (
+        <div className="fixed inset-0 bg-black/60 z-[70] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto overflow-x-hidden flex flex-col animate-scale-in relative">
+            
+            {/* Close Button */}
+            <button
+              onClick={() => setSelectedUmkm(null)}
+              className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-white/80 backdrop-blur-md border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors shadow-sm"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="w-full h-64 md:h-80 relative shrink-0">
+               <img 
+                  src={getImageUrl(selectedUmkm)} 
+                  alt={selectedUmkm.namaUsaha || selectedUmkm.name}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = ImogiriImg;
+                  }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+                <div className="absolute bottom-6 left-6 md:bottom-8 md:left-8 text-white">
+                  <span className="inline-block px-3 py-1 bg-blue-600/90 backdrop-blur-md rounded-full text-xs font-bold mb-3 shadow-sm">
+                      {selectedUmkm.jangkauanPemasaran || selectedUmkm.category}
+                  </span>
+                  <h2 className="text-3xl md:text-4xl font-bold mb-2">
+                    {selectedUmkm.namaUsaha || selectedUmkm.name}
+                  </h2>
+                </div>
+            </div>
+
+            <div className="p-6 md:p-8 space-y-8">
+              {/* Main Info Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                 <div className="bg-blue-50 p-4 rounded-2xl text-center">
+                    <User className="w-6 h-6 text-blue-600 mx-auto mb-2" />
+                    <div className="text-xs text-gray-500 uppercase font-bold tracking-wide">Pemilik</div>
+                    <div className="font-semibold text-gray-900 truncate">{selectedUmkm.namaPemilik || "-"}</div>
+                 </div>
+                 <div className="bg-green-50 p-4 rounded-2xl text-center">
+                    <Calendar className="w-6 h-6 text-green-600 mx-auto mb-2" />
+                    <div className="text-xs text-gray-500 uppercase font-bold tracking-wide">Berdiri</div>
+                    <div className="font-semibold text-gray-900">{selectedUmkm.tahunBerdiri || "-"}</div>
+                 </div>
+                 <div className="bg-purple-50 p-4 rounded-2xl text-center">
+                    <Users className="w-6 h-6 text-purple-600 mx-auto mb-2" />
+                    <div className="text-xs text-gray-500 uppercase font-bold tracking-wide">Karyawan</div>
+                    <div className="font-semibold text-gray-900">{selectedUmkm.jumlahKaryawan || "0"}</div>
+                 </div>
+                 <div className="bg-orange-50 p-4 rounded-2xl text-center">
+                    <Phone className="w-6 h-6 text-orange-600 mx-auto mb-2" />
+                    <div className="text-xs text-gray-500 uppercase font-bold tracking-wide">Kontak</div>
+                    <div className="font-semibold text-gray-900 truncate">{selectedUmkm.noTelp || "-"}</div>
+                 </div>
+              </div>
+
+              {/* Description & Additional Info */}
+              <div className="grid md:grid-cols-3 gap-8">
+                <div className="md:col-span-2 space-y-6">
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                      <Activity className="w-5 h-5 text-blue-600" />
+                      Tentang Usaha
+                    </h3>
+                    <p className="text-gray-600 leading-relaxed text-lg">
+                      {selectedUmkm.deskripsi || selectedUmkm.description || selectedUmkm.keteranganTambahan || "Tidak ada deskripsi tersedia."}
+                    </p>
+                  </div>
+                  
+                  {/* Show Keterangan Tambahan box only if duplicate info exists (both desc and ket exist) */}
+                  {(selectedUmkm.deskripsi || selectedUmkm.description) && selectedUmkm.keteranganTambahan && (
+                    <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
+                      <h3 className="text-sm font-bold text-gray-900 mb-2 uppercase tracking-wide">Keterangan Tambahan</h3>
+                      <p className="text-gray-600">
+                        {selectedUmkm.keteranganTambahan}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-4">
+                  <div className="bg-white border border-gray-100 shadow-lg rounded-2xl p-6">
+                    <h3 className="font-bold text-gray-900 mb-4 border-b border-gray-100 pb-2">Kontak & Bisnis</h3>
+                    <div className="space-y-4">
+                      {selectedUmkm.noTelp && (
+                        <a 
+                          href={`https://wa.me/${selectedUmkm.noTelp.replace(/[^0-9]/g, '')}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-3 text-gray-600 hover:text-green-600 transition-colors p-2 hover:bg-green-50 rounded-lg group"
+                        >
+                          <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-green-100 transition-colors">
+                            <Phone size={18} />
+                          </div>
+                          <div>
+                            <div className="text-xs text-gray-400 font-medium">WhatsApp / Telepon</div>
+                            <div className="font-semibold">{selectedUmkm.noTelp}</div>
+                          </div>
+                        </a>
+                      )}
+                      
+                      <div className="flex items-center gap-3 text-gray-600 p-2">
+                         <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                            <MapPin size={18} />
+                         </div>
+                         <div>
+                            <div className="text-xs text-gray-400 font-medium">Jangkauan</div>
+                            <div className="font-semibold">{selectedUmkm.jangkauanPemasaran || "-"}</div>
+                         </div>
+                      </div>
+                    </div>
+                    
+                    <button 
+                      onClick={() => window.location.href = `https://wa.me/${selectedUmkm.noTelp ? selectedUmkm.noTelp.replace(/[^0-9]/g, '') : ''}`}
+                      disabled={!selectedUmkm.noTelp}
+                      className="w-full mt-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-600/30"
+                    >
+                      Hubungi Pemilik
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Survey List Modal */}
       {showSurveyList && (
